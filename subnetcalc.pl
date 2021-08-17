@@ -1,4 +1,10 @@
 #!/usr/bin/perl
+
+#
+#   Author: <wexe1@protonmail.com>
+#   License: GNU GPL-3.0
+#
+
 use strict;
 use warnings;
 
@@ -128,7 +134,12 @@ sub get_ip {
     while() {
         print "IPv4 address: ";
         chomp($ip = <STDIN>);
-        if($ip =~ /([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})/) {
+
+        # regex from: https://www.regextutorial.org/regex-for-numbers-and-ranges.php
+        if($ip =~ /^([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.
+        ([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.
+        ([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.
+        ([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])$/x) {
             last;
         }
         else {
@@ -147,7 +158,12 @@ sub get_mask {
     while() {
         print "Subnet mask: ";
         chomp($mask = <STDIN>);
-        if($mask =~ /([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})/) {
+
+        # regex from: https://www.regextutorial.org/regex-for-numbers-and-ranges.php
+        if($mask =~ /^([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.
+        ([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.
+        ([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.
+        ([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])$/x) {
             last;
         }
         elsif($mask =~ /\/[0-9]{1,2}/) {
