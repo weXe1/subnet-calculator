@@ -123,7 +123,7 @@ sub network_addrs {
 sub hosts_num {
     my $mask = shift;
     $mask =~ s/^\/// if $mask =~ m/^\//;
-    my $hosts = $mask < 32 ? 1 x (32 - $mask) : 0;
+    my $hosts = $mask < 32 ? 1 x (32 - $mask) : 1;
     return &bin2dec($hosts) - 1;
 }
 
