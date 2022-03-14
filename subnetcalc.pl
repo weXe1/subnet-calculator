@@ -55,9 +55,11 @@ sub dotdec2cidr {
 # returns the mask in dot-decimal format
 sub cidr2dotdec {
     my $cidr = shift;
+    my $one = shift;
+    my $zero = shift;
     $cidr =~ s/^\/// if $cidr =~ m/^\//;
     my $mask = 'X.X.X.X';
-    my $mask_bin = 1 x $cidr . 0 x (32 - $cidr);
+    my $mask_bin = $one x $cidr . $zero x (32 - $cidr);
     for(my $offset = 0; $offset < length $mask_bin; $offset += 8) {
         my $octet = substr $mask_bin, $offset, 8;
         $octet = &bin2dec($octet);
@@ -210,19 +212,20 @@ sub main {
 
     if($cidr) {
         $cidr = $mask;
-        $mask = &cidr2dotdec($cidr);
+        $mask = &cidr2dotdec($cidr, 1, 0);
     }
     else {
         $cidr = &dotdec2cidr($mask);
     }
-    $cidr =~ s/^\/// if $cidr =~ m/^\//;
 
     my($network, $broadcast) = &network_addrs($ip, $cidr);
     my $hosts = &hosts_num($cidr);
+    my $wildcard = &cidr2dotdec($cidr, 0, 1);
 
     print "Network: $network\/$cidr\n";
     print "Broadcast: $broadcast\n";
     print "Mask: $mask\n";
+    print "Wildcard mask: $wildcard\n";
     print "Number of hosts: $hosts\n";
     print "-" x 31 . "\n";
 
