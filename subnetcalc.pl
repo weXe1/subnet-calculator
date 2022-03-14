@@ -123,8 +123,20 @@ sub network_addrs {
 sub hosts_num {
     my $mask = shift;
     $mask =~ s/^\/// if $mask =~ m/^\//;
-    my $hosts = $mask < 32 ? 1 x (32 - $mask) : 1;
-    return &bin2dec($hosts) - 1;
+    my $hosts = 2 ** (32 - $mask) - 2;
+    return $hosts >= 0 ? $hosts : 0;
+}
+
+sub validate_ip {
+    my $ip = shift;
+    if($ip =~ /([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})/) {
+        return 1;
+    }
+    else {
+        print "IP must be in dot-decimal format!\n";
+        print "e. g. 192.168.8.14\n";
+        return 0;
+    }
 }
 
 # get IP address from the user
@@ -134,20 +146,26 @@ sub get_ip {
     while() {
         print "IPv4 address: ";
         chomp($ip = <STDIN>);
-
-        # regex from: https://www.regextutorial.org/regex-for-numbers-and-ranges.php
-        if($ip =~ /^([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.
-        ([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.
-        ([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.
-        ([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])$/x) {
-            last;
-        }
-        else {
-            print "IP must be in dot-decimal format!\n";
-            print "e. g. 192.168.8.14\n";
-        }
+        last if &validate_ip($ip);
     }
     return $ip;
+}
+
+sub validate_mask {
+    my $mask = shift;
+    my $cidr = shift;
+    if($mask =~ /([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})/) {
+        return 1;
+    }
+    elsif($mask =~ /\/[0-9]{1,2}/) {
+        $$cidr = 1;
+        return 1;
+    }
+    else {
+        print "Mask must be in dot-decimal or CIDR format!\n";
+        print "e. g. 255.255.255.0  or /24\n";
+        return 0;
+    }
 }
 
 # get subnet mask from the user
@@ -158,22 +176,7 @@ sub get_mask {
     while() {
         print "Subnet mask: ";
         chomp($mask = <STDIN>);
-
-        # regex from: https://www.regextutorial.org/regex-for-numbers-and-ranges.php
-        if($mask =~ /^([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.
-        ([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.
-        ([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.
-        ([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])$/x) {
-            last;
-        }
-        elsif($mask =~ /\/[0-9]{1,2}/) {
-            $cidr = 1;
-            last;
-        }
-        else {
-            print "Mask must be in dot-decimal or CIDR format!\n";
-            print "e. g. 255.255.255.0  or /24\n";
-        }
+        last if &validate_mask($mask, \$cidr);
     }
     return $mask, $cidr;
 }
@@ -184,11 +187,24 @@ sub main {
     my($ip, $mask);
     my $cidr = 0;
 
-    # get IP address from the user
-    $ip = &get_ip();
+    if(@ARGV == 2) {
+        ($ip, $mask) = ($ARGV[0], $ARGV[1]);
+        exit unless &validate_ip($ip);
+        exit unless &validate_mask($mask, \$cidr);
+    }
+    elsif(@ARGV == 1) {
+        ($ip, $mask) = split('/', $ARGV[0]);
+        $mask = '/' . $mask;
+        exit unless &validate_ip($ip);
+        exit unless &validate_mask($mask, \$cidr);
+    }
+    else {
+        # get IP address from the user
+        $ip = &get_ip();
 
-    # get subnet mask from the user
-    ($mask, $cidr) = &get_mask();
+        # get subnet mask from the user
+        ($mask, $cidr) = &get_mask();
+    }
 
     print "-" x 31 . "\n";
 
